@@ -1,0 +1,31 @@
+name: Preparar Mi casa mi ritmo
+on:
+  push:
+    paths:
+      - '.github/workflows/preparar.yml'
+permissions:
+  contents: write
+jobs:
+  preparar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copiar V2
+        run: |
+          base='https://raw.githubusercontent.com/virxymar/McB-Al-Ataque/mcb-v2-construccion'
+          for f in index.html configurador.html mcb-hotfixes.js mcb-people-v2.js mcb-today-v2.js mcb-preflight.js; do curl -fsSL "$base/$f" -o "$f"; done
+          sed -i 's/McB · Al Ataque V2/Mi casa, mi ritmo/g; s/McB · Al Ataque/Mi casa, mi ritmo/g; s/Configurador universal V2/Configurador de tu hogar/g' index.html configurador.html
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('<nav class="nav">','<script src="mcb-preflight.js"></script><nav class="nav">',1)
+          p.write_text(s)
+          PY
+      - name: Guardar copia
+        run: |
+          git config user.name 'McB Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html configurador.html mcb-hotfixes.js mcb-people-v2.js mcb-today-v2.js mcb-preflight.js
+          git commit -m 'Monta V2 de Mi casa, mi ritmo' || exit 0
+          git push
