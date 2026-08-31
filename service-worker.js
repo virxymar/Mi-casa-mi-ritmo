@@ -1,0 +1,5 @@
+const CACHE='mi-casa-mi-ritmo-v1';
+const CORE=['./','./configurador.html','./index.html','./icon.svg','./mcb-hotfixes.js','./mcb-people-v2.js','./mcb-today-v2.js','./mcb-ui-fixes.js','./mcb-cycle.js','./mcb-trucos.js','./manifest.webmanifest'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{let copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match('./configurador.html'))))});
