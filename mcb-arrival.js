@@ -1,0 +1,20 @@
+/* Mi casa, mi ritmo · realidad al llegar y carga del hogar */
+(function(){'use strict';
+function cfgSafe(){try{return typeof cfg==='function'?(cfg()||{}):{}}catch(e){return{}}}
+function dk(){let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function arrival(){if(!state.arrival||state.arrival.date!==dk())state.arrival={date:dk(),minutes:0,items:[]};return state.arrival}
+const PRESETS=[['Zapatos / entrada por recoger',8],['Ropa tendida por recoger',10],['Doblar ropa',15],['Tratar manchas',15],['Preparar / poner lavadora',10],['Recogida extra',15]];
+function residentLoad(){let ps=cfgSafe().people||[],score=0;ps.forEach(p=>{let r=p.role||'Adulto';score+=r==='Bebé'?1.6:r==='Niño'?1.25:r==='Adolescente'?.75:r==='Persona mayor'?.65:.55});return score}
+function loadExtras(){let s=residentLoad(),out=[];if(s>=2.5)out.push({id:'load_pickup',area:'casa',text:'Recogida extra por uso de la casa',min:Math.min(25,10+Math.round(s*3)),priority:7,room:'entrada'});if(s>=3)out.push({id:'load_laundry',area:'colada',text:'Revisar ropa y coladas acumuladas',min:10,priority:8,essential:true});return out}
+function wrapRaw(){if(typeof rawTasks!=='function'||rawTasks.__arrival)return;let old=rawTasks;window.rawTasks=function(){let a=old()||[],x=loadExtras();x.forEach(t=>{if(!a.some(y=>y&&y.id===t.id))a.push(t)});return a};window.rawTasks.__arrival=true}
+function invalidate(){state.todayPlanDate='';try{save()}catch(_){}try{render()}catch(_){}renderBox()}
+function addPreset(i){let a=arrival(),p=PRESETS[i];a.items.push({id:'arr_'+Date.now(),text:p[0],min:p[1]});a.minutes+=p[1];invalidate()}
+function addMinutes(){let e=document.getElementById('mcbArrivalMinutes'),v=Math.max(0,Number(e&&e.value)||0);if(!v)return;let a=arrival();a.minutes+=v;a.items.push({id:'arr_'+Date.now(),text:'Trabajo encontrado al llegar',min:v});e.value='';invalidate()}
+function clearArrival(){state.arrival={date:dk(),minutes:0,items:[]};invalidate()}
+function remaining(){let c=cfgSafe(),total=Number(c.organization&&c.organization.minutes)||75;return Math.max(0,total-arrival().minutes)}
+function renderBox(){let hoy=document.getElementById('hoy');if(!hoy)return;let box=document.getElementById('mcbArrivalBox');if(!box){box=document.createElement('div');box.id='mcbArrivalBox';box.className='card';let content=document.getElementById('todayContent');hoy.insertBefore(box,content||hoy.firstChild)}let a=arrival(),chips=PRESETS.map((p,i)=>'<button class="chip" onclick="mcbArrivalPreset('+i+')">＋ '+p[0]+'</button>').join('');box.innerHTML='<h2>🚪 Lo que me encuentro al llegar</h2><div class="meta" style="margin:6px 0 10px">Apunta lo que ya te está consumiendo tiempo. La app lo descuenta de la jornada y reajusta el resto.</div><div class="chips">'+chips+'</div><div class="quick" style="margin-top:10px"><input id="mcbArrivalMinutes" class="field" type="number" min="1" placeholder="Otros minutos empleados"><button class="btn" onclick="mcbArrivalAddMinutes()">Añadir</button></div>'+(a.minutes?'<div class="softbox" style="margin-top:10px"><b>⏱️ Ya empleados: '+a.minutes+' min</b><div class="meta">Tiempo orientativo restante: '+remaining()+' min</div>'+(a.items.length?'<div class="meta" style="margin-top:6px">'+a.items.map(x=>'• '+esc(x.text)+' · '+x.min+' min').join('<br>')+'</div>':'')+'<button class="mini" style="margin-top:8px" onclick="mcbArrivalClear()">Reiniciar puesta a punto</button></div>':'')}
+function patchBudget(){if(typeof modeBudget!=='function'||modeBudget.__arrival)return;let old=modeBudget;window.modeBudget=function(){return Math.max(0,old()-arrival().minutes)};window.modeBudget.__arrival=true}
+window.mcbArrivalPreset=addPreset;window.mcbArrivalAddMinutes=addMinutes;window.mcbArrivalClear=clearArrival;
+function start(){wrapRaw();patchBudget();renderBox();let sig=''+residentLoad();if(state.residentLoadSig!==sig){state.residentLoadSig=sig;state.todayPlanDate='';try{save()}catch(_){}}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
