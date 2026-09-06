@@ -13,6 +13,7 @@ function homeIdentity(){var name=activeHomeName(),label=document.getElementById(
 function loadTricks(){if(document.getElementById('mcbTricksScript'))return;var s=document.createElement('script');s.id='mcbTricksScript';s.src='mcb-trucos.js?v=15';document.body.appendChild(s)}
 function loadCycle(){if(document.getElementById('mcbCycleScript'))return;var s=document.createElement('script');s.id='mcbCycleScript';s.src='mcb-cycle.js?v=2';document.body.appendChild(s)}
 function loadArrival(){if(document.getElementById('mcbArrivalScript'))return;var s=document.createElement('script');s.id='mcbArrivalScript';s.src='mcb-arrival.js?v=2';document.body.appendChild(s)}
-function wire(){var addStock=document.getElementById('stockAdd');if(addStock)addStock.onclick=function(){var e=document.getElementById('stockInput');if(!e||!e.value.trim())return;shop.stock.push({name:e.value.trim(),state:'ok'});e.value='';safeSave();shopRender()};window.renderShop=shopRender;try{shopRender()}catch(e){}homeIdentity();loadTricks();loadCycle();loadArrival()}
+function loadNext(){if(document.getElementById('mcbNextScript'))return;var s=document.createElement('script');s.id='mcbNextScript';s.src='mcb-next.js?v=1';document.body.appendChild(s)}
+function wire(){var addStock=document.getElementById('stockAdd');if(addStock)addStock.onclick=function(){var e=document.getElementById('stockInput');if(!e||!e.value.trim())return;shop.stock.push({name:e.value.trim(),state:'ok'});e.value='';safeSave();shopRender()};window.renderShop=shopRender;try{shopRender()}catch(e){}homeIdentity();loadTricks();loadCycle();loadArrival();loadNext()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
 })();
